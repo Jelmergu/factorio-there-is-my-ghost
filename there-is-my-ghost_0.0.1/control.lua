@@ -1,40 +1,16 @@
-function round(num)
-    under = math.floor(num)
-    upper = math.floor(num) + 1
-    underV = -(under - num)
-    upperV = upper - num
-    if (upperV > underV) then
-        return under
-    else
-        return upper
-    end
-end
+require("helpers")
+require("eventHandlerFunctions")
 
-script.on_event(defines.events.on_put_item, function(event)
-    local position = event.position
-    local player = game.players[event.player_index]
-    local heldItem = player.cursor_stack.name
-    local surface = player.surface
+script.on_event(defines.events.on_put_item, validatePositionedGhost)
+--    validatePositionedGhost(event)
+--end)
 
-    local heldItemBox = player.cursor_stack.prototype.place_result.selection_box
-    local width = math.abs(round(heldItemBox["left_top"]["x"]) - round(heldItemBox["right_bottom"]["x"]))
-    local height = math.abs(round(heldItemBox["left_top"]["y"]) - round(heldItemBox["right_bottom"]["y"]))
+script.on_event(defines.events.on_built_entity, builtOrDestroy)
+--    builtOrDestroy (event)
+--end)
 
-    local entities = surface.find_entities({ position, { position.x + width, position.y + height } })
-    game.print("scanning "..serpent.line({ position, { position.x + width, position.y + height } }))
-    for _, e in pairs(entities) do
-        --        if e.name == "entity-ghost" and e.ghost_name ~= heldItem then
-        --            game.print("Item doesn't equal ghost")
-        --        end
+script.on_event(defines.events.on_player_cursor_stack_changed, rememberCursorStackItemName)
 
-        if e.name ~= "entity-ghost" then
-            game.print("not ghost @"..e.position.x..","..e.position.x..": " .. e.name)
-        else
-            game.print("ghost @"..e.position.x..","..e.position.x..": " .. e.ghost_name)
-        end
+script.on_event(defines.events.on_player_joined_game, playerJoined)
 
-    end
-end)
-
-local function entityAtSamePosition(entity, position)
-end
+script.on_event(defines.events.on_player_left_game, playerLeft)

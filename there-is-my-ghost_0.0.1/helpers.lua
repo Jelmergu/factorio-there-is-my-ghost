@@ -9,3 +9,16 @@ function round(num)
         return upper
     end
 end
+
+function in_table(table, item)
+    for _,v in pairs(table) do
+        if v == item then
+            return true
+        end
+    end
+    return false
+end
+
+function var_dump(table)
+    game.print(serpent.block(table))
+end
