@@ -63,6 +63,9 @@ function validatePositionedGhost(event)
                 overlapping = false
             end
         end
+        if e.name == "tile-ghost" then
+            usable = true
+        end
     end
 end
 
