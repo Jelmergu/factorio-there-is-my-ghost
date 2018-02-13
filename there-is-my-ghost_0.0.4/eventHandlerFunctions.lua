@@ -1,7 +1,8 @@
 local overlapping = false
 local usable = true
 local previousEntities = {}
-local cursorStack = {last = nil, current = nil}
+local cursorStack = {last = nil, current = nil }
+local active = true
 
 -- define a table with item names that are not usable
 local unusableItemNames = {"rail"}
@@ -93,6 +94,10 @@ function heldItemIsUsable(item)
 end
 
 function builtOrDestroy(event)
+    if active == false then
+        return
+    end
+
     if usable == false then
         return end
 
@@ -192,4 +197,9 @@ function rememberCursorStackItemName(event)
     else
         cursorStack.last, cursorStack.current = cursorStack.current, nil
     end
+end
+
+function toggleTIMG(event)
+    active = not active
+    game.print(active)
 end
