@@ -1,8 +1,11 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.0.4
+Version: 0.16.4
 Date: 13. 02. 2018
   New Features:
     - Hotkey to toggle There is my Ghost
+    - Blueprint only mode, which changes There is my Ghost to only place on a correct ghost. Incorrect ghosts and empty squares will be ignored
+  Compatibility:
+    - Fixed compatiblity issue with nanobots
 ---------------------------------------------------------------------------------------------------
 Version: 0.0.3
 Date: 12. 02. 2018

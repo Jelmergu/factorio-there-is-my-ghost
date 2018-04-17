@@ -16,3 +16,5 @@ script.on_event(defines.events.on_player_joined_game, playerJoined)
 script.on_event(defines.events.on_player_left_game, playerLeft)
 
 script.on_event("there-is-my-ghost-toggle", toggleTIMG)
+
+script.on_event("there-is-my-ghost-blueprint-only", toggleBlueprintOnly)
