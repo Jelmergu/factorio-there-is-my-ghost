@@ -1,14 +1,14 @@
-local overlapping = {false} -- if true, the next item will not be build
-local usable = {true} -- if false, There is my Ghost will not try to stop the build
+local overlapping = { false } -- if true, the next item will not be build
+local usable = { true } -- if false, There is my Ghost will not try to stop the build
 local previousEntities = { {} }
-local cursorStack = { {last = nil, current = nil } } -- contains a history of the players cursor stack, prevents a problem when placing the last item of the stack
-local active = {true} -- if false, There is my Ghost is inactive until the toggle shortcut is pressed
-local bpOnly = {false} -- if true, There is my Ghost will block all placements unless the object matches the ghost, even if it is a build on a completely empty tile
+local cursorStack = { { last = nil, current = nil } } -- contains a history of the players cursor stack, prevents a problem when placing the last item of the stack
+local active = { true } -- if false, There is my Ghost is inactive until the toggle shortcut is pressed
+local bpOnly = { false } -- if true, There is my Ghost will block all placements unless the object matches the ghost, even if it is a build on a completely empty tile
 
 -- define a table with item names that are not usable
-local unusableItemNames = {"rail"}
+local unusableItemNames = { "rail" }
 
-local putItemFired = {false} -- workaround for nanobots compatibility, nanobots does fire on_build_entity, but doesn't fire on_put_item
+local putItemFired = { false } -- workaround for nanobots compatibility, nanobots does fire on_build_entity, but doesn't fire on_put_item
 
 function validatePositionedGhost(event)
     putItemFired[event.player_index] = true
@@ -24,7 +24,6 @@ function validatePositionedGhost(event)
     local player = game.players[event.player_index]
     -- Check if the item held by the player is usable in for replacing. A blueprint for example is not usable
     if player.cursor_stack == nil then
-        game.print("unusable")
         usable[event.player_index] = false
         return false
     elseif heldItemIsUsable(player.cursor_stack, event.player_index) == false then
@@ -96,18 +95,14 @@ function heldItemIsUsable(item, index)
         item = cursorStack[index].current
     end
     if not item.valid_for_read then
---        game.print("invalid for read")
         if in_table(unusableItemNames, cursorStack[index].current) == false then
             return false
         end
     elseif item.prototype.place_result == nil then
-        game.print("No place result")
         return false
     elseif in_table(unusableItemNames, item.name) == true then
---        game.print("In unusable items")
         return false
     elseif item.prototype.place_result.braking_force ~= nil then
---        game.print("Vehicle?")
         return false -- item is verhicle
     end
 
@@ -149,7 +144,7 @@ function builtOrDestroy(event)
         if previousEntities[event.player_index] ~= nil then
             for _, e in pairs(previousEntities[event.player_index]) do
                 player.surface.create_entity(entityToCreate(e))
---                Restorer:restoreControlBehavior(player.surface, e)
+                --                Restorer:restoreControlBehavior(player.surface, e)
             end
         end
     end
@@ -177,9 +172,9 @@ function storeEntity(e, pi)
     end
 
     if pcall(e.get_recipe) then returnTable.recipe = e.get_recipe() and e.get_recipe().name or "" end
---    if pcall(e.get_control_behavior) and e.get_control_behavior() ~= nil then
---        returnTable.conditions = Parser:parseControlBehavior(e.get_control_behavior())
---    end
+    --    if pcall(e.get_control_behavior) and e.get_control_behavior() ~= nil then
+    --        returnTable.conditions = Parser:parseControlBehavior(e.get_control_behavior())
+    --    end
 
     if type(e["ghost_name"]) ~= nil then returnTable.inner_name = e.ghost_name end
     --    if type(e["filters"]) ~= nil then returnTable.filters = e.filters end
@@ -224,7 +219,7 @@ function rememberCursorStackItemName(event)
     local player = game.players[event.player_index]
 
     if cursorStack[event.player_index] == nil then
-        cursorStack[event.player_index] = {last = nil, current = nil }
+        cursorStack[event.player_index] = { last = nil, current = nil }
     end
 
     if player.cursor_stack.valid_for_read == true and player.cursor_stack ~= nil then
@@ -255,12 +250,14 @@ function playerJoined(event)
     if bpOnly[index] == nil then bpOnly[index] = false end
     if usable[index] == nil then cursorStack[index] = true end
     if overlapping == true or overlapping == false then
-        overlapping = {false}
+        overlapping = { false }
     elseif overlapping[index] == nil then
         overlapping[index] = false
     end
 
-    if previousEntities[index] == nil then previousEntities[index] = {} end
+    if type(previousEntities[index]) ~= 'table' then previousEntities[index] = {} end
 
-    if cursorStack[index] == nil then cursorStack[index] = {last = nil, current = nil } end
+    if type(cursorStack[index]) ~= 'table' then
+        cursorStack[index] = { last = nil, current = nil }
+    end
 end
