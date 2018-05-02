@@ -236,10 +236,18 @@ end
 
 function toggleTIMG(event)
     active[event.player_index] = not active[event.player_index]
+    if settings.player["there-is-my-ghost-toggle-message"].value then
+        local message = active[event.player_index] == true and "on" or "off"
+        game.players[event.player_index].print("There is my Ghost is " .. message)
+    end
 end
 
 function toggleBlueprintOnly(event)
     bpOnly[event.player_index] = not bpOnly[event.player_index]
+    if settings.player["there-is-my-ghost-toggle-message"].value then
+        local message = bpOnly[event.player_index] == true and "on" or "off"
+        game.players[event.player_index].print("There is my Ghost blueprint mode is " .. message)
+    end
 end
 
 
