@@ -6,7 +6,7 @@ local active = { true } -- if false, There is my Ghost is inactive until the tog
 local bpOnly = { false } -- if true, There is my Ghost will block all placements unless the object matches the ghost, even if it is a build on a completely empty tile
 
 -- define a table with item names that are not usable
-local unusableItemNames = { "rail" }
+local unusableItemNames = { "rail", "logistic-train-stop", "land-mine" }
 
 local putItemFired = { false } -- workaround for nanobots compatibility, nanobots does fire on_build_entity, but doesn't fire on_put_item
 
