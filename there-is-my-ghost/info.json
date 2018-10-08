@@ -1,10 +1,10 @@
 {
     "name": "there-is-my-ghost",
-    "version": "0.16.7",
+    "version": "0.16.8",
     "title": "There is my ghost",
     "author": "Jelmergu",
     "homepage": "https://github.com/Jelmergu/factorio-there-is-my-ghost",
     "factorio_version": "0.16",
     "dependencies": ["base >= 0.16.7"],
-    "description": "This mod changes the way you interact with ghosts. You can no longer place a building over a ghost of a different building, which makes blueprints easier to plonk down without construction bots. Does not affect tile ghost"
+    "description": "This mod changes the way you interact with ghosts. You can toggle the ability to no longer place a building over a ghost of a different building, which makes blueprints easier to plonk down without construction bots. Does not affect tile ghost"
 }
