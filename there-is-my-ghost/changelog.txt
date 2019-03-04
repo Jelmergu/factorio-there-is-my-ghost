@@ -1,8 +1,11 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.16.8
-Date: 08. 10. 2018
+Version: 0.17.0
+Date: 04. 03. 2019
+  General:
+    - Update to 0.17
   New Features:
     - Rewrite of the mod
+    - Support for mods that change the drop and pickup location of inserters(ie Bobs Adjustable Inserters)
 ---------------------------------------------------------------------------------------------------
 Version: 0.16.7
 Date: 20. 07. 2018

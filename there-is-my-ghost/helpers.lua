@@ -11,7 +11,7 @@ function round(num)
 end
 
 function in_table(table, item)
-    for _,v in pairs(table) do
+    for _, v in pairs(table) do
         if v == item then
             return true
         end
@@ -20,5 +20,21 @@ function in_table(table, item)
 end
 
 function var_dump(table)
-    game.print(serpent.block(table))
+    if timg.debug == timg.debug_levels.none then
+        return
+    end
+    echo(serpent.block(table))
+end
+
+function echo(string)
+    if timg.debug == timg.debug_levels.none then
+        return
+    end
+    if timg.debug >= timg.debug_levels.log then
+        log(string)
+    end
+
+    if timg.debug >= timg.debug_levels.message then
+        game.print(string)
+    end
 end
