@@ -1,6 +1,8 @@
 events = {
     on_toggle = "there-is-my-ghost-toggle",
+    on_toggle_button = "there-is-my-ghost-toggle-shortcut",
     on_toggle_bp = "there-is-my-ghost-blueprint-only",
+    on_toggle_bp_button = "there-is-my-ghost-blueprint-only-shortcut",
     valid_build = { false },
     init = function()
         if not global then
@@ -18,7 +20,10 @@ events = {
         if not global.unusableItems then
             timg.generate_unusable_items_table()
         end
+
+        timg.events.load()
     end,
+
     on_config_change = function()
         timg.events.init()
     end,
@@ -108,35 +113,50 @@ events = {
 
     toggle = function(event)
         player = event.player_index
+
+        if global.active == nil then
+            global.active = {}
+        end
         if global.active[player] == nil then
             global.active[player] = true
         end
 
         global.active[player] = not global.active[player]
+        if game.players[player].is_shortcut_available(timg.events.on_toggle_button) then
+            game.players[player].set_shortcut_toggled(timg.events.on_toggle_button, global.active[player])
+        end
         timg.events.valid_build[player] = false
-        timg.display_message(
-                {
-                    text = "There is my Ghost is " .. (global.active[player] == true and "on" or "off"),
-                    type = timg.message_types.per_player
-                },
-                player
-        )
+        --timg.display_message(
+        --        {
+        --            text = "There is my Ghost is " .. (global.active[player] == true and "on" or "off"),
+        --            type = timg.message_types.per_player
+        --        },
+        --        player
+        --)
     end,
 
     toggle_blueprint = function(event)
         player = event.player_index
+
+        if global.bp_only == nil then
+            global.bp_only = {}
+        end
         if global.bp_only[player] == nil then
             global.bp_only[player] = false
         end
 
         global.bp_only[player] = not global.bp_only[player]
-        timg.display_message(
-                {
-                    text = "There is my Ghost blueprint mode is " .. (global.bp_only[player] == true and "on" or "off"),
-                    type = timg.message_types.per_player
-                },
-                player
-        )
+        if game.players[player].is_shortcut_available(timg.events.on_toggle_bp_button) then
+            game.players[player].set_shortcut_toggled(timg.events.on_toggle_bp_button, global.bp_only[player])
+        end
+
+        --timg.display_message(
+        --        {
+        --            text = "There is my Ghost blueprint mode is " .. (global.bp_only[player] == true and "on" or "off"),
+        --            type = timg.message_types.per_player
+        --        },
+        --        player
+        --)
     end,
 
     stack_change = function(event)
@@ -182,8 +202,28 @@ events = {
             timg.debug = timg.debug_levels.log
             level = "log"
         end
-        game.print("There is my ghost is now " .. level .. " debug mode")
-    end
+        game.print("There is my ghost is now in" .. level .. " debug mode")
+    end,
+
+    shortcut = function(event)
+        if event.prototype_name == timg.events.on_toggle_button then
+            timg.events.toggle(event)
+        elseif event.prototype_name == timg.events.on_toggle_bp_button then
+            timg.events.toggle_blueprint(event)
+        end
+    end,
+
+    load = function()
+        for i, player in pairs(game.players) do
+
+            if player.is_shortcut_available(timg.events.on_toggle_button) then
+                player.set_shortcut_toggled(timg.events.on_toggle_button, global.active[player.index])
+            end
+            if player.is_shortcut_available(timg.events.on_toggle_bp_button) then
+                player.set_shortcut_toggled(timg.events.on_toggle_bp_button, global.bp_only[player.index])
+            end
+        end
+    end,
 }
 
 return events
