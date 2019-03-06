@@ -22,12 +22,21 @@ events = {
         if global.unusableItems == nil then
             timg.generate_unusable_items_table()
         end
-        log(serpent.block(global))
-        timg.events.load()
+        for i, player in pairs(game.players) do
+
+            if player.is_shortcut_available(timg.events.on_toggle_button) then
+                player.set_shortcut_toggled(timg.events.on_toggle_button, global.active[player.index])
+            end
+            if player.is_shortcut_available(timg.events.on_toggle_bp_button) then
+                player.set_shortcut_toggled(timg.events.on_toggle_bp_button, global.bp_only[player.index])
+            end
+        end
     end,
 
     on_config_change = function()
         timg.events.init()
+
+
     end,
 
     build_entity = function(event)
@@ -215,19 +224,7 @@ events = {
         elseif event.prototype_name == timg.events.on_toggle_bp_button then
             timg.events.toggle_blueprint(event)
         end
-    end,
-
-    load = function()
-        for i, player in pairs(game.players) do
-
-            if player.is_shortcut_available(timg.events.on_toggle_button) then
-                player.set_shortcut_toggled(timg.events.on_toggle_button, global.active[player.index])
-            end
-            if player.is_shortcut_available(timg.events.on_toggle_bp_button) then
-                player.set_shortcut_toggled(timg.events.on_toggle_bp_button, global.bp_only[player.index])
-            end
-        end
-    end,
+    end
 }
 
 return events

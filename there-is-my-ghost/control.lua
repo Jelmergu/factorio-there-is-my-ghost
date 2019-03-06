@@ -19,6 +19,4 @@ script.on_event(defines.events.on_lua_shortcut, timg.events.shortcut)
 
 script.on_init(timg.events.init)
 
-script.on_load(timg.events.load)
-
 commands.add_command("timg_debug", "Toggle There is my Ghosts debug mode. This will print a load of messages when on", timg.events.toggle_debug)
