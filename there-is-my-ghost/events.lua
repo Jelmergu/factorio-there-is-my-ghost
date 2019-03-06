@@ -5,22 +5,24 @@ events = {
     on_toggle_bp_button = "there-is-my-ghost-blueprint-only-shortcut",
     valid_build = { false },
     init = function()
-        if not global then
+
+        log("There is my ghost initialized")
+        if not global == nil then
             global = {}
         end
-        if not global.active then
+        if global.active == nil then
             global.active = { true }
         end
-        if not global.bp_only then
+        if global.bp_only == nil then
             global.bp_only = { false }
         end
-        if not global.cursor_stack then
+        if global.cursor_stack == nil then
             global.cursor_stack = { { last = "", current = "" } }
         end
-        if not global.unusableItems then
+        if global.unusableItems == nil then
             timg.generate_unusable_items_table()
         end
-
+        log(serpent.block(global))
         timg.events.load()
     end,
 
@@ -162,12 +164,14 @@ events = {
     stack_change = function(event)
         pid = event.player_index
         player = game.players[pid]
-
+        log(serpent.block(global))
         if not global.cursor_stack[pid] then
             global.cursor_stack[pid] = { last = "", current = "" }
         end
-        if not player.cursor_stack.valid_for_read or
-                not player.cursor_stack.prototype.place_result
+
+        if not player.cursor_stack or
+           not player.cursor_stack.valid_for_read or
+           not player.cursor_stack.prototype.place_result
         then
             current = ""
         else
