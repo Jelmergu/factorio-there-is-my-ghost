@@ -42,8 +42,8 @@ events = {
     build_entity = function(event)
         pid = event.player_index
         echo("build")
-        echo(serpent.block(event))
 
+        echo("item usable "..(timg.is_item_usable(game.players[pid]) and "true" or "false"))
         if not timg.is_active(pid) or
                 not timg.is_item_usable(game.players[pid]) then
             echo("TIMG is not active or the item is unusable. TIMG is " .. (timg.is_active(pid) and "active" or "not active"))
@@ -67,6 +67,7 @@ events = {
     end,
 
     put_item = function(event)
+        echo("put_item")
         local pid = event.player_index
         local player = game.players[pid]
 
@@ -74,6 +75,7 @@ events = {
         echo(serpent.block(event))
 
         if event.shift_build then
+            echo("a valid shift build")
             timg.events.valid_build[pid] = true
             return
         end
@@ -120,6 +122,7 @@ events = {
             timg.events.valid_build[pid] = false
         end
         timg.store_entities_in_area(item_dimensions.area, player)
+        echo("end put_item")
     end,
 
     toggle = function(event)

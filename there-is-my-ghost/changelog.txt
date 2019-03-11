@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.17.4
+Date: 06. 03. 2019
+  Bug Fixes:
+    - Fix that a rail could cause a crash
+  Localization:
+    - Add German translations thanks to bNarFProfCrazy
+---------------------------------------------------------------------------------------------------
 Version: 0.17.3
 Date: 06. 03. 2019
   Bug Fixes:

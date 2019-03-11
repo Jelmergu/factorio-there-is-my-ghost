@@ -4,7 +4,7 @@ timg = {
         per_player = 2
     },
     events = require "events",
-    unusableItems = { "rail", "logistic-train-stop", "land-mine"},
+    unusableItems = { "rail", "rail-planner", "straight-rail", "logistic-train-stop", "land-mine"},
     stored_entities = {},
     debug_levels = {
         none = 0,
@@ -120,11 +120,14 @@ timg.is_item_usable = function(player)
             end
             return false
         elseif in_table(global.unusableItems, player.cursor_stack.name) then
+            echo("should be here")
             return false
         end
-    elseif in_table(global.unusableItems, global.cursor_stack.last) then
+    elseif in_table(global.unusableItems, global.cursor_stack[player.index].last) then
+        echo("Last cursor stack item was unusuable")
         return false
     end
+    echo("not unusable, not valid for read")
     return true
 end
 
@@ -313,6 +316,6 @@ end
 
 timg.generate_unusable_items_table = function()
     if not global.unusableItems then
-        global.unusableItems = { "straight-rail", "rail", "logistic-train-stop", "land-mine" }
+        global.unusableItems = timg.unusableItems
     end
 end
