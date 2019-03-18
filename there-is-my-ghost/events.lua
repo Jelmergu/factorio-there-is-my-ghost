@@ -3,10 +3,11 @@ events = {
     on_toggle_button = "there-is-my-ghost-toggle-shortcut",
     on_toggle_bp = "there-is-my-ghost-blueprint-only",
     on_toggle_bp_button = "there-is-my-ghost-blueprint-only-shortcut",
+    is_map_editor = false,
     valid_build = { false },
+    reserved_inventory_spot = {0},
     init = function()
 
-        log("There is my ghost initialized")
         if not global == nil then
             global = {}
         end
@@ -22,8 +23,11 @@ events = {
         if global.unusableItems == nil then
             timg.generate_unusable_items_table()
         end
-        for i, player in pairs(game.players) do
+        if global.reserved_inventory_spot == nil then
+            global.reserved_inventory_spot = {0}
+        end
 
+        for i, player in pairs(game.players) do
             if player.is_shortcut_available(timg.events.on_toggle_button) then
                 player.set_shortcut_toggled(timg.events.on_toggle_button, global.active[player.index])
             end
@@ -39,13 +43,21 @@ events = {
 
     end,
 
+    map_editor_toggle = function(event)
+        timg.events.is_map_editor = true
+        for i, v in pairs(global.active) do
+            global.active[i] = false
+            global.bp_only[i] = false
+        end
+    end,
+
     build_entity = function(event)
         pid = event.player_index
         echo("build")
 
         echo("item usable "..(timg.is_item_usable(game.players[pid]) and "true" or "false"))
-        if not timg.is_active(pid) or
-                not timg.is_item_usable(game.players[pid]) then
+
+        if (not timg.is_active(pid)) or (not timg.is_item_usable(game.players[pid])) then
             echo("TIMG is not active or the item is unusable. TIMG is " .. (timg.is_active(pid) and "active" or "not active"))
             return
         end
@@ -126,6 +138,9 @@ events = {
     end,
 
     toggle = function(event)
+        if timg.events.is_map_editor == true then
+            return
+        end
         player = event.player_index
 
         if global.active == nil then
@@ -150,6 +165,9 @@ events = {
     end,
 
     toggle_blueprint = function(event)
+        if timg.events.is_map_editor == true then
+            return
+        end
         player = event.player_index
 
         if global.bp_only == nil then
@@ -176,17 +194,21 @@ events = {
     stack_change = function(event)
         pid = event.player_index
         player = game.players[pid]
-        log(serpent.block(global))
+
         if not global.cursor_stack[pid] then
             global.cursor_stack[pid] = { last = "", current = "" }
         end
 
         if not player.cursor_stack or
-           not player.cursor_stack.valid_for_read or
-           not player.cursor_stack.prototype.place_result
+                not player.cursor_stack.valid_for_read or
+                not player.cursor_stack.prototype.place_result
         then
             current = ""
+        elseif in_table(global.unusableItems.types, player.cursor_stack.prototype.place_result.type) then
+            current = ""
+            table.insert(global.unusableItems.items, player.cursor_stack.name)
         else
+
             current = player.cursor_stack.prototype.place_result.name
         end
 

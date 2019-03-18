@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.17.5
+Date: 18. 03. 2019
+  Bug Fixes:
+    - Fix that placing a biter spawner would cause a crash
+  New Features:
+    - There is my ghost is now disabled in the map editor
+---------------------------------------------------------------------------------------------------
 Version: 0.17.4
 Date: 06. 03. 2019
   Bug Fixes:

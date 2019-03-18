@@ -4,7 +4,7 @@ timg = {
         per_player = 2
     },
     events = require "events",
-    unusableItems = { "rail", "rail-planner", "straight-rail", "logistic-train-stop", "land-mine"},
+    unusableItems = require "unusables",
     stored_entities = {},
     debug_levels = {
         none = 0,
@@ -115,15 +115,15 @@ timg.is_item_usable = function(player)
                 player.cursor_stack.prototype.place_result.braking_force ~= nil or
                 player.cursor_stack.prototype.place_result.speed
         then
-            if not in_table(global.unusableItems, player.cursor_stack.name) then
-                table.insert(global.unusableItems, player.cursor_stack.name)
+            if not in_table(global.unusableItems.items, player.cursor_stack.name) then
+                table.insert(global.unusableItems.items, player.cursor_stack.name)
             end
             return false
-        elseif in_table(global.unusableItems, player.cursor_stack.name) then
+        elseif (in_table(global.unusableItems.items, player.cursor_stack.name)) or (in_table(global.unusableItems.types, player.cursor_stack.type))then
             echo("should be here")
             return false
         end
-    elseif in_table(global.unusableItems, global.cursor_stack[player.index].last) then
+    elseif in_table(global.unusableItems.items, global.cursor_stack[player.index].last) then
         echo("Last cursor stack item was unusuable")
         return false
     end
@@ -159,7 +159,6 @@ timg.store_entities_in_area = function(area, player)
 end
 
 timg.store_entity = function(entity, pid)
-
     local returnTable = {
         name = entity.name,
         position = entity.position,
