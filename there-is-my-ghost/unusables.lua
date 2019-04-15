@@ -1,4 +1,4 @@
-local unusables = {
+local unUsables = {
     items = {
         "rail",
         "rail-planner",
@@ -10,7 +10,15 @@ local unusables = {
         "unit",
         "unit-spawner",
         "corpse"
+    },
+    fast_replacable = {
+        "miniloader-inserter"
     }
 }
 
-return unusables
+local unReturnables = {
+    "miniloader-inserter"
+}
+
+return {unUsables, unReturnables}
+

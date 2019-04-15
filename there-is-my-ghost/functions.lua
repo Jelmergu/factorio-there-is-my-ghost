@@ -4,7 +4,7 @@ timg = {
         per_player = 2
     },
     events = require "events",
-    unusableItems = require "unusables",
+
     stored_entities = {},
     debug_levels = {
         none = 0,
@@ -12,7 +12,11 @@ timg = {
         message = 2,
     },
     directions = {},
+    intermod = require "intermod",
 }
+local unusable = require "unusables"
+timg.unusableItems, timg.unreturnable = unusable[1], unusable[2]
+
 timg.debug = timg.debug_levels.none
 
 timg.directions[0] = { defines.direction.north, defines.direction.south }
@@ -50,14 +54,6 @@ timg.calculate_item_dimensions = function(item_box, event)
         right_bottom = { event.position.x + (width / 2), event.position.y + (height / 2) }
     }
 
-    echo("Calculated item dimensions:")
-    var_dump({
-        area = area,
-        width = width,
-        height = height,
-        rectangle = rectangle
-    })
-
     return {
         area = area,
         width = width,
@@ -75,20 +71,16 @@ timg.is_entity_matching = function(entity, event)
     if entity.supports_direction == true then
         if (entity.ghost_type == "underground-belt" or entity.ghost_type == "pipe-to-ground") then
             if not (timg.directions[entity.direction][1] == event.direction or timg.directions[entity.direction][2] == event.direction) then
-                echo("entity direction of underground doesn't match. Events direction: " .. event.direction .. ", matching directions: " .. serpent.line(timg.directions[entity.direction]))
                 return false
             end
         else
             if timg.directions[entity.direction][1] ~= event.direction then
-                echo("entity direction of doesn't match. Events direction: " .. event.direction .. ", matching directions: " .. serpent.line(timg.directions[entity.direction][1]))
                 return false
             end
         end
     end
 
     if not (entity.position.x == event.position.x and entity.position.y == event.position.y) then
-        echo("pos x: " .. entity.position.x .. " == " .. event.position.x)
-        echo("pos y: " .. entity.position.y .. " == " .. event.position.y)
         return false
     end
 
@@ -99,12 +91,21 @@ timg.count_entities_in_area = function(area, surface)
     local count = 0
     for _, __ in pairs(surface.find_entities_filtered({ type = "entity-ghost", area = area })) do
         count = count + 1
-        echo(__.ghost_name)
     end
-    --for _, __ in pairs(surface.find_entities_filtered({area=area, type="resource"})) do
-    --    count = count - 1
-    --end
     return count
+end
+
+timg.is_item_name_or_type_usable = function(name, type, fast_replace)
+    if name ~= nil and in_table(global.unusableItems.items, name) or in_table(timg.unusableItems.items, name) then
+        return false
+    end
+    if type ~= nil and in_table(global.unusableItems.type, type) or in_table(timg.unusableItems.type, type) then
+        return false
+    end
+    if fast_replace ~= nil and in_table(global.unusableItems.fast_replace, fast_replace) or in_table(timg.unusableItems.fast_replace, fast_replace) then
+        return false
+    end
+    return true
 end
 
 timg.is_item_usable = function(player)
@@ -115,15 +116,15 @@ timg.is_item_usable = function(player)
                 player.cursor_stack.prototype.place_result.braking_force ~= nil or
                 player.cursor_stack.prototype.place_result.speed
         then
-            if not in_table(global.unusableItems.items, player.cursor_stack.name) then
+            if timg.is_item_name_or_type_usable(player.cursor_stack.name) then
                 table.insert(global.unusableItems.items, player.cursor_stack.name)
             end
             return false
-        elseif (in_table(global.unusableItems.items, player.cursor_stack.name)) or (in_table(global.unusableItems.types, player.cursor_stack.type))then
+        elseif not timg.is_item_name_or_type_usable(player.cursor_stack.name, player.cursor_stack.type, player.cursor_stack.prototype.place_result.fast_replaceable_group) then
             echo("should be here")
             return false
         end
-    elseif in_table(global.unusableItems.items, global.cursor_stack[player.index].last) then
+    elseif not timg.is_item_name_or_type_usable(global.cursor_stack[player.index].last) then
         echo("Last cursor stack item was unusuable")
         return false
     end
@@ -262,25 +263,25 @@ timg.restore_stored_entities = function(pid)
     timg.stored_entities[pid] = {}
 end
 
-timg.restore_stored_entity = function(entity, surface)
-    new_entity = surface.create_entity(
+timg.restore_stored_entity = function(stored_entity, surface)
+    local new_entity = surface.create_entity(
             {
-                name = entity.name,
-                position = entity.position,
-                direction = entity.direction,
-                force = entity.force,
+                name = stored_entity.name,
+                position = stored_entity.position,
+                direction = stored_entity.direction,
+                force = stored_entity.force,
                 fast_replace = false,
-                recipe = entity.recipe,
-                inner_name = entity.inner_name,
-                type = entity.type
+                recipe = stored_entity.recipe,
+                inner_name = stored_entity.inner_name,
+                type = stored_entity.type
             }
     )
-    new_entity = timg.restore_inserter(new_entity, entity)
-    new_entity = timg.restore_splitter(new_entity, entity)
+    new_entity = timg.restore_inserter(new_entity, stored_entity)
+    new_entity = timg.restore_splitter(new_entity, stored_entity)
 
     if new_entity.request_slot_count > 0 then
-        for i = 0, entity.request_slots.count do
-            new_entity.set_request_slot(entity.request_slots[i + 1], i + 1)
+        for i = 0, stored_entity.request_slots.count do
+            new_entity.set_request_slot(stored_entity.request_slots[i + 1], i + 1)
         end
     end
     echo("Restored entity:" .. (new_entity.name == "entity-ghost" and "ghost of " .. new_entity.ghost_name or new_entity.name))
@@ -315,6 +316,10 @@ end
 
 timg.generate_unusable_items_table = function()
     if not global.unusableItems then
-        global.unusableItems = timg.unusableItems
+        global.unusableItems = {
+            items = {},
+            types = {},
+            fast_replace = {}
+        }
     end
 end

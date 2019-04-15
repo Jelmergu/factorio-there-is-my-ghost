@@ -52,6 +52,7 @@ events = {
     end,
 
     build_entity = function(event)
+        echo(event.created_entity.name)
         pid = event.player_index
         echo("build")
 
@@ -69,10 +70,13 @@ events = {
 
         echo("valid_build set to: " .. (timg.events.valid_build[pid] and "true" or "false"))
         if not timg.events.valid_build[pid] then
-            echo(event.created_entity.name.." invalid build, restoring entities")
-            game.players[pid].insert({ name = event.created_entity.name, count = 1 })
-            event.created_entity.destroy()
-            timg.restore_stored_entities(pid)
+            entityName = event.created_entity.name
+            entityName = timg.intermod.intermodCompat(entityName)
+            echo(entityName.." invalid build, restoring entities")
+            if event.created_entity.destroy({raise_destroy = true}) then
+                game.players[pid].insert({ name = entityName, count = 1 })
+                timg.restore_stored_entities(pid)
+            end
         end
 
         timg.events.reset_valid_build(pid)

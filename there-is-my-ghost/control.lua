@@ -1,6 +1,7 @@
 require "helpers"
 require "functions"
 
+
 script.on_init(timg.events.init)
 
 script.on_configuration_changed(timg.events.on_config_change)

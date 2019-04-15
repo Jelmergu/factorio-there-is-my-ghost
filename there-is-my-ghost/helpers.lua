@@ -11,6 +11,9 @@ function round(num)
 end
 
 function in_table(table, item)
+    if table == nil then
+        return false
+    end
     for _, v in pairs(table) do
         if v == item then
             return true
