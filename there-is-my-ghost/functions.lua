@@ -17,7 +17,7 @@ timg = {
 local unusable = require "unusables"
 timg.unusableItems, timg.unreturnable = unusable[1], unusable[2]
 
-timg.debug = timg.debug_levels.none
+timg.debug = timg.debug_levels.log
 
 timg.directions[0] = { defines.direction.north, defines.direction.south }
 timg.directions[1] = { defines.direction.northeast, defines.direction.southwest }
@@ -128,7 +128,6 @@ timg.is_item_usable = function(player)
         echo("Last cursor stack item was unusuable")
         return false
     end
-    echo("not unusable, not valid for read")
     return true
 end
 
