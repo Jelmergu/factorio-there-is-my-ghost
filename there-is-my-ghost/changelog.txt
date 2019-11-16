@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.17.8
+Date: 16. 11. 2019
+  Bug Fix:
+    - Fix that on_raise_build_entity can crash the game when another script has cleared the player stack
+    - Fix that sometimes a ghost would be duplicated because of put_item events getting followed by put_item events instead of build_item events
+---------------------------------------------------------------------------------------------------
+Version: 0.17.7
+Date: 16. 05. 2019
+  Bug Fix:
+    - Fix that the check for items usability was incorrect
+---------------------------------------------------------------------------------------------------
 Version: 0.17.6
 Date: 06. 05. 2019
   General:

@@ -14,10 +14,11 @@ timg = {
     directions = {},
     intermod = require "intermod",
 }
+timg.debug = timg.debug_levels.log
+
+
 local unusable = require "unusables"
 timg.unusableItems, timg.unreturnable = unusable[1], unusable[2]
-
-timg.debug = timg.debug_levels.log
 
 timg.directions[0] = { defines.direction.north, defines.direction.south }
 timg.directions[1] = { defines.direction.northeast, defines.direction.southwest }
@@ -28,10 +29,11 @@ timg.directions[5] = { defines.direction.southwest, defines.direction.northeast 
 timg.directions[6] = { defines.direction.west, defines.direction.east }
 timg.directions[7] = { defines.direction.northwest, defines.direction.southeast }
 
-timg.calculate_item_dimensions = function(item_box, event)
+function timg.calculate_item_dimensions(item_box, event)
+    echo("timg.calculate_item_dimensions: begin")
     width = math.abs(round(item_box["left_top"]["x"]) - round(item_box["right_bottom"]["x"]))
     height = math.abs(round(item_box["left_top"]["y"]) - round(item_box["right_bottom"]["y"]))
-
+    echo("timg.calculate_item_dimensions: width="..width..", height="..height)
     -- make sure the box is at least 1x1. Yellow inserter has a box that results in a 0x0 box
     if width <= 0 then
         width = 1
@@ -53,7 +55,13 @@ timg.calculate_item_dimensions = function(item_box, event)
         left_top = { event.position.x - (width / 2), event.position.y - (height / 2) },
         right_bottom = { event.position.x + (width / 2), event.position.y + (height / 2) }
     }
-
+    --var_dump({
+    --    area = area,
+    --    width = width,
+    --    height = height,
+    --    rectangle = rectangle
+    --})
+    echo("timg.calculate_item_dimensions: end")
     return {
         area = area,
         width = width,
@@ -64,7 +72,7 @@ end
 
 timg.is_entity_matching = function(entity, event)
     if entity == nil then
-        echo("entity not matching, no entity")
+        echo("is_entity_matching: entity doesn't match with placed entity, no entity")
         return false
     end
 
@@ -97,37 +105,40 @@ end
 
 timg.is_item_name_or_type_usable = function(name, type, fast_replace)
     if name ~= nil and in_table(global.unusableItems.items, name) or in_table(timg.unusableItems.items, name) then
+        echo(name)
         return false
     end
     if type ~= nil and in_table(global.unusableItems.type, type) or in_table(timg.unusableItems.type, type) then
+        echo(type)
         return false
     end
     if fast_replace ~= nil and in_table(global.unusableItems.fast_replace, fast_replace) or in_table(timg.unusableItems.fast_replace, fast_replace) then
+        echo(fast_replace)
         return false
     end
     return true
 end
 
-timg.is_item_usable = function(player)
+timg.is_item_usable = function(stack)
     -- Check if the item held by the player is usable for replacing. A blueprint for example is not usable
-    if player.cursor_stack.valid_for_read then
-        if player.cursor_stack.prototype.place_result == nil or
-                player.cursor_stack.prototype.place_as_tile_result ~= nil or
-                player.cursor_stack.prototype.place_result.braking_force ~= nil or
-                player.cursor_stack.prototype.place_result.speed
+    if stack ~= nil and stack.valid_for_read then
+        if stack.prototype.place_result == nil or
+                stack.prototype.place_as_tile_result ~= nil or
+                stack.prototype.place_result.braking_force ~= nil or
+                stack.prototype.place_result.speed
         then
-            if timg.is_item_name_or_type_usable(player.cursor_stack.name) then
-                table.insert(global.unusableItems.items, player.cursor_stack.name)
+            if timg.is_item_name_or_type_usable(stack.name) then
+                table.insert(global.unusableItems.items, stack.name)
             end
             return false
-        elseif not timg.is_item_name_or_type_usable(player.cursor_stack.name, player.cursor_stack.type, player.cursor_stack.prototype.place_result.fast_replaceable_group) then
-            echo("should be here")
-            return false
+        elseif timg.is_item_name_or_type_usable(stack.name, stack.type, stack.prototype.place_result.fast_replaceable_group) then
+            echo("is_item_usable: Item is usable")
+            return true
         end
-    elseif not timg.is_item_name_or_type_usable(global.cursor_stack[player.index].last) then
-        echo("Last cursor stack item was unusuable")
+        echo("is_item_usable: not item_name_or_type_usable")
         return false
     end
+    echo("is_item_usable: stack is valid for read")
     return true
 end
 
@@ -153,12 +164,15 @@ timg.display_message = function(message, player)
 end
 
 timg.store_entities_in_area = function(area, player)
-    for k, e in pairs(player.surface.find_entities_filtered({ area = area, name = 'entity-ghost' })) do
+    local entities = player.surface.find_entities_filtered({ area = area, name = 'entity-ghost' })
+    echo("timg.store_entities_in_area: storing "..count(entities).." entities")
+    for k, e in pairs(entities) do
         timg.store_entity(e, player.index)
     end
 end
 
 timg.store_entity = function(entity, pid)
+    echo("store_entity: called for "..entity.name)
     local returnTable = {
         name = entity.name,
         position = entity.position,
@@ -173,7 +187,7 @@ timg.store_entity = function(entity, pid)
     }
 
     if returnTable.direction ~= nil and entity.supports_direction == false then
-        echo("direction not supported, but stored direction set")
+        echo("store_entity: direction not supported, but stored direction set")
     end
 
     returnTable = timg.store_underground_belt(entity, returnTable)
@@ -197,7 +211,10 @@ timg.store_entity = function(entity, pid)
     if not timg.stored_entities[pid] then
         timg.stored_entities[pid] = {}
     end
+    echo("store_entity: returntable is")
+    --var_dump(returnTable)
     table.insert(timg.stored_entities[pid], returnTable)
+    echo("store_entity: end")
 end
 
 timg.store_splitter = function(entity, returnTable)
@@ -253,16 +270,25 @@ timg.store_loader = function(entity, returnTable)
 end
 
 timg.restore_stored_entities = function(pid)
+
+    echo("restore_stored_entities: begin")
     if not timg.stored_entities[pid] then
+        echo("restore_stored_entities: no stored entities, ending here")
         return
     end
+    echo("restore_stored_entities: restoring "..count(timg.stored_entities[pid]).." entities")
+    local count=0
     for k, e in pairs(timg.stored_entities[pid]) do
-        timg.restore_stored_entity(e, game.players[pid].surface)
+        count = count+1
+        timg.restore_stored_entity(e, game.players[pid].surface, event)
     end
+
     timg.stored_entities[pid] = {}
+    echo("restore_stored_entities: end with a count of "..count)
 end
 
-timg.restore_stored_entity = function(stored_entity, surface)
+timg.restore_stored_entity = function(stored_entity, surface, event)
+    echo("restore_stored_entity: begin")
     local new_entity = surface.create_entity(
             {
                 name = stored_entity.name,
@@ -275,6 +301,11 @@ timg.restore_stored_entity = function(stored_entity, surface)
                 type = stored_entity.type
             }
     )
+    if new_entity == nil then
+        echo("restore_stored_entity: placed entity is nil")
+        return false
+    end
+
     new_entity = timg.restore_inserter(new_entity, stored_entity)
     new_entity = timg.restore_splitter(new_entity, stored_entity)
 
@@ -283,7 +314,8 @@ timg.restore_stored_entity = function(stored_entity, surface)
             new_entity.set_request_slot(stored_entity.request_slots[i + 1], i + 1)
         end
     end
-    echo("Restored entity:" .. (new_entity.name == "entity-ghost" and "ghost of " .. new_entity.ghost_name or new_entity.name))
+    echo("restore_stored_entity: Restored entity:" .. (new_entity.name == "entity-ghost" and "ghost of " .. new_entity.ghost_name or new_entity.name))
+    echo("restore_stored_entity: end")
 end
 
 timg.restore_splitter = function(entity, stored_entity)

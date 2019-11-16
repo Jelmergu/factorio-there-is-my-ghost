@@ -22,6 +22,18 @@ function in_table(table, item)
     return false
 end
 
+function count(table)
+    if table == nil then
+        return 0
+    end
+    local count = 0
+    for _, __ in pairs(table) do
+        count = count+1
+    end
+    return count
+end
+
+
 function var_dump(table)
     if timg.debug == timg.debug_levels.none then
         return

@@ -47,46 +47,55 @@ events = {
     end,
 
     build_entity = function(event)
-        echo(event.created_entity.name)
-        pid = event.player_index
-        echo("build")
+        echo("build_entity: begin")
         echo(serpent.block(event))
 
-        echo("item usable "..(timg.is_item_usable(game.players[pid]) and "true" or "false"))
+        pid = event.player_index
 
-        if (not timg.is_active(pid)) or (not timg.is_item_usable(game.players[pid])) then
-            echo("TIMG is not active or the item is unusable. TIMG is " .. (timg.is_active(pid) and "active" or "not active"))
+        echo("build_entity: item usable "..(timg.is_item_usable(event.stack) and "true" or "false"))
+
+        if (not timg.is_active(pid)) or (not timg.is_item_usable(event.stack)) then
+            echo("build_entity: TIMG is not active or the item is unusable. TIMG is " .. (timg.is_active(pid) and "active" or "not active"))
             return
         end
 
         if event.created_entity.name == "entity-ghost" then
-            echo("it was an entity ghost")
+            echo("build_entity: it was an entity ghost")
             return
         end
 
-        echo("valid_build set to: " .. (timg.events.valid_build[pid] and "true" or "false"))
+        echo("build_entity: valid_build set to: " .. (timg.events.valid_build[pid] and "true" or "false"))
         if not timg.events.valid_build[pid] then
             entityName = event.created_entity.name
 
-            echo(entityName.." invalid build, restoring entities")
-            if event.created_entity.destroy({raise_destroy = true}) then
+            echo("build_entity: "..entityName.." invalid build")
+            local destroyed = event.created_entity.destroy({raise_destroy = true})
+            echo("build_entity: New entity is "..(destroyed == true and "destroyed" or "not destroyed"))
+            if destroyed then
                 game.players[pid].insert({ name = event.item.name, count = 1 })
-                timg.restore_stored_entities(pid)
+                var_dump(timg.stored_entities[pid])
+                if count(timg.stored_entities[pid]) ~= 0 then
+                    echo("build_entity: "..entityName.." invalid build, found stored entities, restoring now")
+                    timg.restore_stored_entities(pid, event)
+                end
             end
         end
 
         timg.events.reset_valid_build(pid)
+        echo("build_entity: end")
     end,
 
     put_item = function(event)
-        echo("put_item")
+        echo("put_item: begin")
         local pid = event.player_index
         local player = game.players[pid]
 
         echo(serpent.block(event))
 
+        timg.events.reset_valid_build(pid)
+
         if event.shift_build then
-            echo("a valid shift build")
+            echo("put_item: a valid shift build")
             timg.events.valid_build[pid] = true
             return
         end
@@ -95,36 +104,36 @@ events = {
             return
         end
 
-        if not timg.is_item_usable(player) then
+        if not timg.is_item_usable(player.cursor_stack) then
             return
         end
         if player.cursor_stack.valid_for_read == false then
-            echo("cursor stack invalid")
+            echo("put_item: cursor stack invalid")
             timg.events.valid_build[pid] = false
             return
         end
         local item_dimensions = timg.calculate_item_dimensions(player.cursor_stack.prototype.place_result.selection_box, event)
 
         entity_count = timg.count_entities_in_area(item_dimensions.area, player.surface)
-        echo("counted " .. entity_count .. " entities")
+        echo("put_item: counted " .. entity_count .. " entities")
         if entity_count == 1 then
             ghost_name = timg.intermod.intermodCompat(player.cursor_stack.prototype.name)
             entities = player.surface.find_entities_filtered({ area = area, name = 'entity-ghost', ghost_name = ghost_name })
             if timg.is_entity_matching(entities[1], event) then
-                echo("entities match")
+                echo("put_item: entities match")
                 timg.events.valid_build[pid] = true
                 return
             else
-                echo("entities don't match")
+                echo("put_item: entities don't match")
                 timg.events.valid_build[pid] = false
             end
         elseif entity_count == 0 then
-            echo("no entities detected")
+            echo("put_item: no entities detected")
             if timg.is_bp_only(pid) then
-                echo("bp_only invalid build")
+                echo("put_item: bp_only invalid build")
                 timg.events.valid_build[pid] = false
             else
-                echo("build is valid")
+                echo("put_item: build is valid")
                 timg.events.valid_build[pid] = true
                 return
             end
@@ -132,7 +141,7 @@ events = {
             timg.events.valid_build[pid] = false
         end
         timg.store_entities_in_area(item_dimensions.area, player)
-        echo("end put_item")
+        echo("put_item: end put_item")
     end,
 
     toggle = function(event)
@@ -195,6 +204,7 @@ events = {
         else
             timg.events.valid_build[pid] = true
         end
+        timg.stored_entities[pid] = { }
     end,
 
     print_global = function()
@@ -213,7 +223,7 @@ events = {
             timg.debug = timg.debug_levels.log
             level = "log"
         end
-        game.print("There is my ghost is now in" .. level .. " debug mode")
+        game.print("There is my ghost is now in '" .. level .. "' debug mode")
     end,
 
     shortcut = function(event)
