@@ -14,7 +14,7 @@ timg = {
     directions = {},
     intermod = require "intermod",
 }
-timg.debug = timg.debug_levels.log
+timg.debug = timg.debug_levels.none
 
 
 local unusable = require "unusables"
@@ -29,10 +29,10 @@ timg.directions[5] = { defines.direction.southwest, defines.direction.northeast 
 timg.directions[6] = { defines.direction.west, defines.direction.east }
 timg.directions[7] = { defines.direction.northwest, defines.direction.southeast }
 
-function timg.calculate_item_dimensions(item_box, event)
+function timg.calculate_item_dimensions(item_box, direction, position)
     echo("timg.calculate_item_dimensions: begin")
-    width = math.abs(round(item_box["left_top"]["x"]) - round(item_box["right_bottom"]["x"]))
-    height = math.abs(round(item_box["left_top"]["y"]) - round(item_box["right_bottom"]["y"]))
+    local width = math.abs(round(item_box["left_top"]["x"]) - round(item_box["right_bottom"]["x"]))
+    local height = math.abs(round(item_box["left_top"]["y"]) - round(item_box["right_bottom"]["y"]))
     echo("timg.calculate_item_dimensions: width="..width..", height="..height)
     -- make sure the box is at least 1x1. Yellow inserter has a box that results in a 0x0 box
     if width <= 0 then
@@ -43,24 +43,18 @@ function timg.calculate_item_dimensions(item_box, event)
     end
 
     -- check if the item is a rectangle, and in the correct orientation
-    rectangle = false
+    local rectangle = false
     if width ~= height then
-        if event.direction == defines.direction.west or event.direction == defines.direction.east then
+        if direction == defines.direction.west or direction == defines.direction.east then
             width, height = height, width -- flip the width and height variables. Otherwise the wrong area is scanned(north to south instead of east to west)
         end
         rectangle = true
     end
 
-    area = {
-        left_top = { event.position.x - (width / 2), event.position.y - (height / 2) },
-        right_bottom = { event.position.x + (width / 2), event.position.y + (height / 2) }
+    local area = {
+        left_top = { position.x - (width / 2), position.y - (height / 2) },
+        right_bottom = { position.x + (width / 2), position.y + (height / 2) }
     }
-    --var_dump({
-    --    area = area,
-    --    width = width,
-    --    height = height,
-    --    rectangle = rectangle
-    --})
     echo("timg.calculate_item_dimensions: end")
     return {
         area = area,
@@ -70,7 +64,7 @@ function timg.calculate_item_dimensions(item_box, event)
     }
 end
 
-timg.is_entity_matching = function(entity, event)
+function timg.is_entity_matching(entity, event)
     if entity == nil then
         echo("is_entity_matching: entity doesn't match with placed entity, no entity")
         return false
@@ -88,14 +82,10 @@ timg.is_entity_matching = function(entity, event)
         end
     end
 
-    if not (entity.position.x == event.position.x and entity.position.y == event.position.y) then
-        return false
-    end
-
-    return true
+    return (entity.position.x == event.position.x and entity.position.y == event.position.y)
 end
 
-timg.count_entities_in_area = function(area, surface)
+function timg.count_entities_in_area(area, surface)
     local count = 0
     for _, __ in pairs(surface.find_entities_filtered({ type = "entity-ghost", area = area })) do
         count = count + 1
@@ -103,54 +93,25 @@ timg.count_entities_in_area = function(area, surface)
     return count
 end
 
-timg.is_item_name_or_type_usable = function(name, type, fast_replace)
-    if name ~= nil and in_table(global.unusableItems.items, name) or in_table(timg.unusableItems.items, name) then
-        echo(name)
-        return false
-    end
-    if type ~= nil and in_table(global.unusableItems.type, type) or in_table(timg.unusableItems.type, type) then
-        echo(type)
-        return false
-    end
-    if fast_replace ~= nil and in_table(global.unusableItems.fast_replace, fast_replace) or in_table(timg.unusableItems.fast_replace, fast_replace) then
-        echo(fast_replace)
-        return false
-    end
-    return true
+function timg.check_ghost(prototype_name, event, area)
+    local ghost_name = timg.intermod.intermodCompat(prototype_name)
+    local entities = game.get_player(event.player_index).surface.find_entities_filtered({ area = area, name = 'entity-ghost', ghost_name = ghost_name})
+    return timg.is_entity_matching(entities[1], event)
 end
 
-timg.is_item_usable = function(stack)
-    -- Check if the item held by the player is usable for replacing. A blueprint for example is not usable
-    if stack ~= nil and stack.valid_for_read then
-        if stack.prototype.place_result == nil or
-                stack.prototype.place_as_tile_result ~= nil or
-                stack.prototype.place_result.braking_force ~= nil or
-                stack.prototype.place_result.speed
-        then
-            if timg.is_item_name_or_type_usable(stack.name) then
-                table.insert(global.unusableItems.items, stack.name)
-            end
-            return false
-        elseif timg.is_item_name_or_type_usable(stack.name, stack.type, stack.prototype.place_result.fast_replaceable_group) then
-            echo("is_item_usable: Item is usable")
-            return true
-        end
-        echo("is_item_usable: not item_name_or_type_usable")
-        return false
-    end
-    echo("is_item_usable: stack is valid for read")
-    return true
+function timg.is_item_usable(stack)
+    return stack.place_result.fast_replaceable_group ~= nil and not in_table(timg.unusableItems.fast_replace, stack.place_result.fast_replaceable_group)
 end
 
-timg.is_active = function(player)
+function timg.is_active(player)
     return global.active[player]
 end
 
-timg.is_bp_only = function(player)
+function timg.is_bp_only(player)
     return global.bp_only[player]
 end
 
-timg.display_message = function(message, player)
+function timg.display_message(message, player)
     if player == 0 and message.type == timg.message_types.global then
         game.print(message.text)
         return
@@ -163,15 +124,16 @@ timg.display_message = function(message, player)
     end
 end
 
-timg.store_entities_in_area = function(area, player)
+function timg.store_entities_in_area(area, pid)
+    local player = game.get_player(pid)
     local entities = player.surface.find_entities_filtered({ area = area, name = 'entity-ghost' })
     echo("timg.store_entities_in_area: storing "..count(entities).." entities")
     for k, e in pairs(entities) do
-        timg.store_entity(e, player.index)
+        timg.store_entity(e, pid)
     end
 end
 
-timg.store_entity = function(entity, pid)
+function timg.store_entity(entity, pid)
     echo("store_entity: called for "..entity.name)
     local returnTable = {
         name = entity.name,
@@ -212,23 +174,23 @@ timg.store_entity = function(entity, pid)
         timg.stored_entities[pid] = {}
     end
     echo("store_entity: returntable is")
-    --var_dump(returnTable)
+    var_dump(returnTable)
     table.insert(timg.stored_entities[pid], returnTable)
     echo("store_entity: end")
 end
 
-timg.store_splitter = function(entity, returnTable)
+function timg.store_splitter(entity, returnTable)
     if not (entity.ghost_type == "splitter" or entity.type == "splitter") then
         return returnTable
     end
-    -- Doesn't work in 0.16. Should work in 0.17
-    --returnTable.splitter_filter = entity.splitter_filter ~= nil and entity.splitter_filter or nil
-    --returnTable.splitter_input_priority = entity.splitter_input_priority ~= nil and entity.splitter_input_priority or nil
-    --returnTable.splitter_output_priority = entity.splitter_output_priority ~= nil and entity.splitter_output_priority or nil
+
+    returnTable.splitter_filter = entity.splitter_filter ~= nil and entity.splitter_filter.name or nil
+    returnTable.splitter_input_priority = entity.splitter_input_priority ~= nil and entity.splitter_input_priority or nil
+    returnTable.splitter_output_priority = entity.splitter_output_priority ~= nil and entity.splitter_output_priority or nil
     return returnTable
 end
 
-timg.store_inserter = function(entity, returnTable)
+function timg.store_inserter(entity, returnTable)
     if entity == nil then
         return returnTable
     end
@@ -243,7 +205,7 @@ timg.store_inserter = function(entity, returnTable)
     return returnTable
 end
 
-timg.store_underground_belt = function(entity, returnTable)
+function timg.store_underground_belt(entity, returnTable)
     if entity == nil then
         return returnTable
     end
@@ -256,7 +218,7 @@ timg.store_underground_belt = function(entity, returnTable)
     return returnTable
 end
 
-timg.store_loader = function(entity, returnTable)
+function timg.store_loader(entity, returnTable)
     if entity == nil then
         return returnTable
     end
@@ -269,7 +231,7 @@ timg.store_loader = function(entity, returnTable)
     return returnTable
 end
 
-timg.restore_stored_entities = function(pid)
+function timg.restore_stored_entities(pid)
 
     echo("restore_stored_entities: begin")
     if not timg.stored_entities[pid] then
@@ -287,7 +249,7 @@ timg.restore_stored_entities = function(pid)
     echo("restore_stored_entities: end with a count of "..count)
 end
 
-timg.restore_stored_entity = function(stored_entity, surface, event)
+function timg.restore_stored_entity(stored_entity, surface, event)
     echo("restore_stored_entity: begin")
     local new_entity = surface.create_entity(
             {
@@ -318,20 +280,20 @@ timg.restore_stored_entity = function(stored_entity, surface, event)
     echo("restore_stored_entity: end")
 end
 
-timg.restore_splitter = function(entity, stored_entity)
+function timg.restore_splitter(entity, stored_entity)
     if entity == nil then
         return entity
     end
     if not (entity.ghost_type == "splitter" or entity.type == "splitter") then
         return entity
     end
-    --entity.splitter_filter = stored_entity.splitter_filter ~= nil and stored_entity.splitter_filter or nil
-    --entity.splitter_input_priority = stored_entity.splitter_input_priority ~= nil and stored_entity.splitter_input_priority or nil
-    --entity.splitter_output_priority = stored_entity.splitter_output_priority ~= nil and stored_entity.splitter_output_priority or nil
+    entity.splitter_filter = stored_entity.splitter_filter ~= nil and stored_entity.splitter_filter or nil
+    entity.splitter_input_priority = stored_entity.splitter_input_priority ~= nil and stored_entity.splitter_input_priority or nil
+    entity.splitter_output_priority = stored_entity.splitter_output_priority ~= nil and stored_entity.splitter_output_priority or nil
     return entity
 end
 
-timg.restore_inserter = function(entity, stored_entity)
+function timg.restore_inserter(entity, stored_entity)
     if entity == nil then
         return entity
     end
@@ -345,7 +307,7 @@ timg.restore_inserter = function(entity, stored_entity)
     return entity
 end
 
-timg.generate_unusable_items_table = function()
+function timg.generate_unusable_items_table()
     if not global.unusableItems then
         global.unusableItems = {
             items = {},

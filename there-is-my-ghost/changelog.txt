@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.18.0
+Date: 22. 01. 2019
+  General:
+    - Update to 0.18
+  Bug Fix:
+    - Fix shortcut having to be pressed twice at the beginning of the game
+    - Fix that placing over a splitter ghost would clear the priority and/or filter
+  Compatibility:
+    - Set incompatibility with GhostPlacerExpress
+---------------------------------------------------------------------------------------------------
 Version: 0.17.8
 Date: 16. 11. 2019
   Bug Fix:
