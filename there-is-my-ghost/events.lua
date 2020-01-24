@@ -11,26 +11,11 @@ events = {
         if not global == nil then
             global = {}
         end
-        if global.active == nil then
-            global.active = { false }
-        end
-        if global.bp_only == nil then
-            global.bp_only = { false }
-        end
         if global.unusableItems == nil then
             timg.generate_unusable_items_table()
         end
         if global.reserved_inventory_spot == nil then
             global.reserved_inventory_spot = { 0 }
-        end
-
-        for i, player in pairs(game.players) do
-            if player.is_shortcut_available(timg.events.on_toggle_button) then
-                player.set_shortcut_toggled(timg.events.on_toggle_button, false)
-            end
-            if player.is_shortcut_available(timg.events.on_toggle_bp_button) then
-                player.set_shortcut_toggled(timg.events.on_toggle_bp_button, false)
-            end
         end
     end,
 
@@ -40,7 +25,7 @@ events = {
 
     map_editor_toggle = function(event)
         timg.events.is_map_editor = true
-        for i, v in pairs(global.active) do
+        for i, _ in pairs(global.active) do
             global.active[i] = false
             global.bp_only[i] = false
         end
@@ -110,59 +95,19 @@ events = {
         entity_count = timg.count_entities_in_area(item_dimensions.area, player.surface)
         echo("put_item: counted " .. entity_count .. " entities")
         if entity_count == 1 then
-            timg.events.valid_build[event.player_index] = timg.check_ghost(player.cursor_stack.prototype.name, event, area)
+            timg.events.valid_build[event.player_index] = timg.check_ghost(player.cursor_stack.prototype.name, event, item_dimensions.area)
         elseif entity_count == 0 then
-            timg.events.valid_build[event.player_index] = not timg.is_bp_only(pid)
+            echo( "put_item: BPonly is "..(not timg.is_bp_only(event.player_index) and "off" or "on"))
+            timg.events.valid_build[event.player_index] = not timg.is_bp_only(event.player_index)
         else
             timg.events.valid_build[event.player_index] = false
         end
 
         if timg.events.valid_build[event.player_index] == false then
-            pid = event.player_index
-            echo(event.player_index)
-            echo(pid)
-            timg.store_entities_in_area(item_dimensions.area, pid)
+            echo("put_item: invalid build")
+            timg.store_entities_in_area(item_dimensions.area, event.player_index)
         end
         echo("put_item: end put_item")
-    end,
-
-    toggle = function(event)
-        if timg.events.is_map_editor == true then
-            return
-        end
-        player = event.player_index
-
-        if global.active == nil then
-            global.active = {}
-        end
-        if global.active[event.player_index] == nil then
-            global.active[event.player_index] = true
-        end
-
-        global.active[event.player_index] = not global.active[event.player_index]
-        if game.players[event.player_index].is_shortcut_available(timg.events.on_toggle_button) then
-            game.players[event.player_index].set_shortcut_toggled(timg.events.on_toggle_button, global.active[event.player_index])
-        end
-        timg.events.valid_build[event.player_index] = false
-    end,
-
-    toggle_blueprint = function(event)
-        if timg.events.is_map_editor == true then
-            return
-        end
-        player = event.player_index
-
-        if global.bp_only == nil then
-            global.bp_only = {}
-        end
-        if global.bp_only[event.player_index] == nil then
-            global.bp_only[event.player_index] = false
-        end
-
-        global.bp_only[event.player_index] = not global.bp_only[event.player_index]
-        if game.players[event.player_index].is_shortcut_available(timg.events.on_toggle_bp_button) then
-            game.players[event.player_index].set_shortcut_toggled(timg.events.on_toggle_bp_button, global.bp_only[event.player_index])
-        end
     end,
 
     reset_valid_build = function(pid)
@@ -194,12 +139,55 @@ events = {
     end,
 
     shortcut = function(event)
-        if event.prototype_name == timg.events.on_toggle_button then
-            timg.events.toggle(event)
-        elseif event.prototype_name == timg.events.on_toggle_bp_button then
-            timg.events.toggle_blueprint(event)
+        echo("shortcut")
+        if timg.events.is_map_editor == true then
+            echo("shortcut toggle: map editor")
+            return
         end
-    end
+        echo("still shortcut"..event.name)
+        if event.prototype_name == timg.events.on_toggle_button or event.prototype_name == timg.events.on_toggle_bp_button then
+            event.timg_name = event.prototype_name
+            timg.events.shortcut_toggle(event)
+        end
+    end,
+
+    shortcut_toggle = function(event)
+        echo("shortcut toggle: begin")
+        player = event.player_index
+
+        if global.bp_only == nil then
+            global.bp_only = {}
+        end
+        if global.active == nil then
+            global.active = {}
+        end
+        echo(event.timg_name)
+        echo(event.prototype_name)
+        if event.timg_name == timg.events.on_toggle_bp_button and game.players[event.player_index].is_shortcut_available(timg.events.on_toggle_bp_button) then
+            echo("toggle_blueprint: setting to "..(global.bp_only[event.player_index] == true and "true" or "false"))
+            game.players[event.player_index].set_shortcut_toggled(timg.events.on_toggle_bp_button, not game.players[event.player_index].is_shortcut_toggled(timg.events.on_toggle_bp_button))
+
+        elseif event.timg_name == timg.events.on_toggle_button and game.players[event.player_index].is_shortcut_available(timg.events.on_toggle_button) then
+            echo("toggle timg: setting to "..(global.active[event.player_index] == true and "true" or "false"))
+            game.players[event.player_index].set_shortcut_toggled(timg.events.on_toggle_button, not game.players[event.player_index].is_shortcut_toggled(timg.events.on_toggle_button))
+            global.active[event.player_index] = game.players[event.player_index].is_shortcut_toggled(timg.events.on_toggle_button)
+        end
+        global.active[event.player_index] = game.players[event.player_index].is_shortcut_toggled(timg.events.on_toggle_button)
+        global.bp_only[event.player_index] = game.players[event.player_index].is_shortcut_available(timg.events.on_toggle_bp_button)
+        timg.events.reset_valid_build(event.player_index)
+    end,
+
+    toggle = function(event)
+        echo("toggle_timg: begin")
+        event.timg_name = timg.events.on_toggle_button
+        timg.events.shortcut_toggle(event)
+    end,
+
+    toggle_blueprint = function(event)
+        echo("toggle_blueprint: begin")
+        event.timg_name = timg.events.on_toggle_bp_button
+        timg.events.shortcut_toggle(event)
+    end,
 }
 
 return events

@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.18.1
+Date: 24. 01. 2019
+  Bug Fix:
+    - Fix shortcut not activating
+    - Fix that mod doesn't prevent placing different entities over a ghost
+---------------------------------------------------------------------------------------------------
 Version: 0.18.0
 Date: 22. 01. 2019
   General:

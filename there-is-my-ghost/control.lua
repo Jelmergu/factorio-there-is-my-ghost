@@ -22,7 +22,6 @@ script.on_event(
             {filter="type", type="unit-spawner", invert=true, mode="and"},
             {filter="type", type="corpse", invert=true, mode="and"},
             {filter="name", name="logistic-train-stop", invert=true, mode="and"},
-
         })
 
 --script.on_event(defines.events.on_player_cursor_stack_changed, timg.events.stack_change)

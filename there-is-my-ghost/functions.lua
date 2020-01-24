@@ -14,7 +14,7 @@ timg = {
     directions = {},
     intermod = require "intermod",
 }
-timg.debug = timg.debug_levels.none
+timg.debug = timg.debug_levels.message
 
 
 local unusable = require "unusables"
@@ -95,7 +95,10 @@ end
 
 function timg.check_ghost(prototype_name, event, area)
     local ghost_name = timg.intermod.intermodCompat(prototype_name)
+    echo("check_ghost: ghost name "..ghost_name)
+    var_dump(area)
     local entities = game.get_player(event.player_index).surface.find_entities_filtered({ area = area, name = 'entity-ghost', ghost_name = ghost_name})
+    echo("check_ghost: ghosts found ".. count(entities))
     return timg.is_entity_matching(entities[1], event)
 end
 
@@ -104,11 +107,12 @@ function timg.is_item_usable(stack)
 end
 
 function timg.is_active(player)
-    return global.active[player]
+    return game.players[player].is_shortcut_toggled(timg.events.on_toggle_button)
 end
 
 function timg.is_bp_only(player)
-    return global.bp_only[player]
+    echo(player)
+    return game.players[player].is_shortcut_toggled(timg.events.on_toggle_bp_button)
 end
 
 function timg.display_message(message, player)
