@@ -14,7 +14,7 @@ timg = {
     directions = {},
     intermod = require "intermod",
 }
-timg.debug = timg.debug_levels.message
+timg.debug = timg.debug_levels.none
 
 
 local unusable = require "unusables"
