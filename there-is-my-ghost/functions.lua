@@ -149,7 +149,7 @@ function timg.store_entity(entity, pid)
         request_filters = {},
         last_user = entity.last_user and entity.last_user or game.players[pid].name,
         item_requests = entity.item_requests and entity.item_requests or {},
-        request_slots = { count = 0 }
+        request_slots = { count = 0, contents = { } }
     }
 
     if returnTable.direction ~= nil and entity.supports_direction == false then
@@ -169,9 +169,14 @@ function timg.store_entity(entity, pid)
     end
     returnTable.request_slots.count = entity.request_slot_count
     if entity.request_slot_count ~= 0 then
-        for i = 0, entity.request_slot_count do
-            returnTable.request_slots[i + 1] = entity.get_request_slot(i + 1)
+        echo("Request slot count is" .. entity.request_slot_count)
+        for i = 1, entity.request_slot_count, 1 do
+            r = entity.get_request_slot(i)
+            if r ~= nil then
+                returnTable.request_slots.contents[i] = {name = r.name, count = r.count}
+            end
         end
+        var_dump(returnTable.request_slots)
     end
 
     if not timg.stored_entities[pid] then
@@ -264,7 +269,8 @@ function timg.restore_stored_entity(stored_entity, surface, event)
                 fast_replace = false,
                 recipe = stored_entity.recipe,
                 inner_name = stored_entity.inner_name,
-                type = stored_entity.type
+                type = stored_entity.type,
+                item_requests = stored_entity.item_requests
             }
     )
     if new_entity == nil then
@@ -276,10 +282,11 @@ function timg.restore_stored_entity(stored_entity, surface, event)
     new_entity = timg.restore_splitter(new_entity, stored_entity)
 
     if new_entity.request_slot_count > 0 then
-        for i = 0, stored_entity.request_slots.count do
-            new_entity.set_request_slot(stored_entity.request_slots[i + 1], i + 1)
+        for i, v in ipairs(stored_entity.request_slots.contents) do
+            new_entity.set_request_slot(v,i)
         end
     end
+
     echo("restore_stored_entity: Restored entity:" .. (new_entity.name == "entity-ghost" and "ghost of " .. new_entity.ghost_name or new_entity.name))
     echo("restore_stored_entity: end")
 end

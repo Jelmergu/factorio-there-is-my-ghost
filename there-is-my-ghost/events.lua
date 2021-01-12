@@ -24,10 +24,13 @@ events = {
     end,
 
     map_editor_toggle = function(event)
-        timg.events.is_map_editor = true
-        for i, _ in pairs(global.active) do
-            global.active[i] = false
-            global.bp_only[i] = false
+        echo("Map editor")
+        timg.events.is_map_editor = not timg.events.is_map_editor
+        if global.active ~= nil then
+            for i, _ in pairs(global.active) do
+                global.active[i] = false
+                global.bp_only[i] = false
+            end
         end
     end,
 

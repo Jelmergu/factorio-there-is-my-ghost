@@ -5,7 +5,7 @@ script.on_init(timg.events.init)
 
 script.on_configuration_changed(timg.events.on_config_change)
 
-script.on_event(defines.events.on_put_item, timg.events.put_item)
+script.on_event(defines.events.on_pre_build, timg.events.put_item)
 
 script.on_event(
         defines.events.on_built_entity,

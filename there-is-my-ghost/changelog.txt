@@ -1,11 +1,24 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 12. 01. 2021
+  General:
+    - Update for 1.1
+  Bug Fix:
+    - Fix not loading in 1.1 because of an event rename
+---------------------------------------------------------------------------------------------------
+Version: 0.18.3
+Date: 20. 05. 2020
+  Bug Fix:
+    - Fix crash due to the placing of buffer or requester chests
+    - Fix incompatibility with Edit-Blueprints
+---------------------------------------------------------------------------------------------------
 Version: 0.18.2
 Date: 24. 01. 2019
   Bug Fix:
     - Fix debug messages
 ---------------------------------------------------------------------------------------------------
 Version: 0.18.1
-Date: 24. 01. 2019
+Date: 23. 01. 2019
   Bug Fix:
     - Fix shortcut not activating
     - Fix that mod doesn't prevent placing different entities over a ghost
@@ -78,7 +91,7 @@ Date: 20. 07. 2018
   Bug Fixes:
     - Fixed bug when used with LTN
 ---------------------------------------------------------------------------------------------------
-Version: 0.16.5
+Version: 0.16.6
 Date: 30. 04. 2018
   New Features:
     - Message when toggling There is my Ghost or blueprint mode
@@ -105,4 +118,3 @@ Version: 0.0.2
 Date: 10. 02. 2018
   Bug Fixes:
     - Fixed bug with tiles
----------------------------------------------------------------------------------------------------
